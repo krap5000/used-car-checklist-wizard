@@ -1,5 +1,4 @@
 // Used Car Checklist Wizard – minimal working wizard (Vehicle Info → First Call → Summary)
-// Tailwind is already configured. This file compiles on Vercel (no unused React import).
 
 import { useMemo, useState } from "react";
 
@@ -19,7 +18,6 @@ type VehicleInfo = {
 type FirstCallAnswer = { id: string; question: string; expected?: string; answer: string };
 
 // TODO: Add the rest of the First Call questions verbatim from your Excel.
-// For now, this includes the one you called out specifically.
 const FIRST_CALL_QUESTIONS: Array<{ id: string; question: string; expected?: string }> = [
   {
     id: "emissions_and_registration",
@@ -186,7 +184,7 @@ export default function App() {
             <div className="rounded-xl border bg-gray-50 p-4">
               <h3 className="font-medium mb-2">First Call to Seller</h3>
               <ol className="space-y-3 list-decimal pl-5">
-                {firstCallList.map((a, idx) => (
+                {firstCallList.map((a) => (
                   <li key={a.id} className="text-sm">
                     <div className="font-medium">{a.question}</div>
                     {a.expected && <div className="text-gray-600">Expected: {a.expected}</div>}
