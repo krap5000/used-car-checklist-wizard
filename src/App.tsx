@@ -1,5 +1,7 @@
-// Used Car Checklist Wizard – Vehicle Info + First Call (summary + CSV/JSON export)
-// Tailwind is already set up in your project.
+// Used Car Checklist Wizard – minimal working wizard (Vehicle Info → First Call → Summary)
+// Tailwind is already configured. This file compiles on Vercel (no unused React import).
+
+import { useMemo, useState } from "react";
 
 type VehicleInfo = {
   make: string;
@@ -16,29 +18,14 @@ type VehicleInfo = {
 
 type FirstCallAnswer = { id: string; question: string; expected?: string; answer: string };
 
-// TODO: Add the rest of your “First Call to Seller” questions here verbatim from Excel.
-// Include the item you mentioned earlier.
+// TODO: Add the rest of the First Call questions verbatim from your Excel.
+// For now, this includes the one you called out specifically.
 const FIRST_CALL_QUESTIONS: Array<{ id: string; question: string; expected?: string }> = [
   {
-    id: "emissions_and_reg",
+    id: "emissions_and_registration",
+    // verbatim per your sheet
     question:
-      "Ask: When was the emission testing done and when is the registration due (if not in the ad)?",
-    expected: "Recent emissions test date and a clear registration renewal date."
-  },
-  {
-    id: "owners_count",
-    question: "How many owners has the vehicle had?",
-    expected: "Lower owner count is generally better; verify with records."
-  },
-  {
-    id: "accidents_title",
-    question: "Any accidents, salvage/branded title, flood, or airbag deployment?",
-    expected: "Clean title, no flood/salvage, no airbag deployment."
-  },
-  {
-    id: "maintenance_records",
-    question: "Do you have maintenance/service records (oil changes, major work, recalls)?",
-    expected: "Consistent records; recall work completed."
+      "Ask When was the emission testing done when is the registration (if not in the ad)."
   }
 ];
 
@@ -60,13 +47,13 @@ function toCSV(rows: string[][]) {
   const esc = (s: string) => {
     const v = s ?? "";
     return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
-    };
-  return rows.map(r => r.map(esc).join(",")).join("\n");
+  };
+  return rows.map((r) => r.map(esc).join(",")).join("\n");
 }
 
 export default function App() {
-  const [step, setStep] = React.useState<0 | 1 | 2>(0);
-  const [vehicle, setVehicle] = React.useState<VehicleInfo>({
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const [vehicle, setVehicle] = useState<VehicleInfo>({
     make: "",
     model: "",
     year: "",
@@ -78,11 +65,11 @@ export default function App() {
     cityState: "",
     listingUrl: ""
   });
-  const [answers, setAnswers] = React.useState<Record<string, FirstCallAnswer>>({});
+  const [answers, setAnswers] = useState<Record<string, FirstCallAnswer>>({});
 
-  const firstCallList: FirstCallAnswer[] = React.useMemo(
+  const firstCallList: FirstCallAnswer[] = useMemo(
     () =>
-      FIRST_CALL_QUESTIONS.map(q => ({
+      FIRST_CALL_QUESTIONS.map((q) => ({
         id: q.id,
         question: q.question,
         expected: q.expected,
@@ -92,12 +79,10 @@ export default function App() {
   );
 
   const onVehicle = (k: keyof VehicleInfo, v: string) =>
-    setVehicle(prev => ({ ...prev, [k]: v }));
+    setVehicle((prev) => ({ ...prev, [k]: v }));
 
   const setAnswer = (id: string, question: string, expected: string | undefined, answer: string) =>
-    setAnswers(prev => ({ ...prev, [id]: { id, question, expected, answer } }));
-
-  const finished = step === 2;
+    setAnswers((prev) => ({ ...prev, [id]: { id, question, expected, answer } }));
 
   const nav = (
     <div className="flex items-center gap-2">
@@ -132,7 +117,7 @@ export default function App() {
           <div className="flex gap-2 text-sm">
             <StepBadge label="Vehicle Info" active={step === 0} done={step > 0} />
             <StepBadge label="First Call to Seller" active={step === 1} done={step > 1} />
-            <StepBadge label="Summary" active={step === 2} done={false} />
+            <StepBadge label="Summary" active={step === 2} />
           </div>
           {nav}
         </div>
@@ -201,10 +186,10 @@ export default function App() {
             <div className="rounded-xl border bg-gray-50 p-4">
               <h3 className="font-medium mb-2">First Call to Seller</h3>
               <ol className="space-y-3 list-decimal pl-5">
-                {firstCallList.map((a) => (
+                {firstCallList.map((a, idx) => (
                   <li key={a.id} className="text-sm">
                     <div className="font-medium">{a.question}</div>
-                    <div className="text-gray-600">{a.expected ? `Expected: ${a.expected}` : ""}</div>
+                    {a.expected && <div className="text-gray-600">Expected: {a.expected}</div>}
                     <div className="mt-1">
                       <span className="text-gray-600">Answer: </span>
                       <span className="font-medium break-words whitespace-pre-wrap">{a.answer || "—"}</span>
@@ -219,10 +204,7 @@ export default function App() {
               <button
                 className="rounded-lg border px-3 py-2 hover:bg-gray-50"
                 onClick={() => {
-                  const payload = {
-                    vehicle,
-                    firstCall: firstCallList
-                  };
+                  const payload = { vehicle, firstCall: firstCallList };
                   download(
                     `used-car-first-call-${new Date().toISOString().slice(0, 19)}.json`,
                     JSON.stringify(payload, null, 2),
@@ -238,11 +220,9 @@ export default function App() {
                 onClick={() => {
                   const rows: string[][] = [];
                   rows.push(["Section", "Field", "Value"]);
-                  Object.entries(vehicle).forEach(([k, v]) =>
-                    rows.push(["Vehicle", labelize(k), v])
-                  );
-                  firstCallList.forEach((a, idx) => {
-                    rows.push(["First Call", `Q${idx + 1}: ${a.question}`, a.answer || ""]);
+                  Object.entries(vehicle).forEach(([k, v]) => rows.push(["Vehicle", labelize(k), v]));
+                  firstCallList.forEach((a, i) => {
+                    rows.push(["First Call", `Q${i + 1}: ${a.question}`, a.answer || ""]);
                   });
                   download(
                     `used-car-first-call-${new Date().toISOString().slice(0, 19)}.csv`,
