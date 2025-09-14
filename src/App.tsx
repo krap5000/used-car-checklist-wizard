@@ -608,24 +608,6 @@ export default function App() {
     </section>
   );
 
-  const nav = (
-    <div className="flex items-center gap-2">
-      <button
-        className={classNames("rounded-lg px-4 py-2 border", step === 0 ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-50")}
-        disabled={step === 0}
-        onClick={() => goto(-1)}
-      >
-        Back
-      </button>
-      <button
-        className={classNames("rounded-lg px-4 py-2 text-white", step < totalSteps-1 ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700")}
-        onClick={() => goto(1)}
-      >
-        {step < totalSteps-1 ? "Next" : "Finish"}
-      </button>
-    </div>
-  );
-
   // Downloads on Summary
   const handleDownloadJSON = () => {
     const payload = {
@@ -648,9 +630,11 @@ export default function App() {
     Object.entries(vehicle).forEach(([k,v]) => rows.push(["Vehicle","",labelize(k),"","",v as string]));
 
     // First Call
-    firstCallItems.forEach((q, i) =>
-      rows.push(["First Call to Seller", `${i+1}`, q.question, q.expected ?? "", "", q.answer ?? ""])
-    );
+    let fcIndex = 0;
+    firstCallItems.forEach((q) => {
+      fcIndex += 1;
+      rows.push(["First Call to Seller", String(fcIndex), q.question, q.expected ?? "", "", q.answer ?? ""]);
+    });
 
     // Scored sections
     scoredBySection.forEach(({section, items}) => {
@@ -748,7 +732,7 @@ export default function App() {
             <div className="rounded-xl border bg-gray-50 p-4">
               <h3 className="font-medium mb-2">First Call to Seller</h3>
               <ol className="space-y-3 list-decimal pl-5">
-                {firstCallItems.map((a, i) => (
+                {firstCallItems.map((a) => (
                   <li key={a.id} className="text-sm">
                     <div className="font-medium">{a.question}</div>
                     {a.expected && <div className="text-gray-600 whitespace-pre-line">Expected: {a.expected}</div>}
